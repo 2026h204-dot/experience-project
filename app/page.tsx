@@ -3,134 +3,154 @@
 import React, { useState } from 'react';
 import { CASES_DATA, CATEGORIES, EVALUATION_OPTIONS, CaseItem } from '../data/cases';
 
+type Step = 'home' | 'category' | 'list' | 'detail';
+
 export default function HomePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+  const [step, setStep] = useState<Step>('home');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [currentCase, setCurrentCase] = useState<CaseItem | null>(null);
-  
-  // A와 B 각각의 5단계 평가 저장
+
   const [evalA, setEvalA] = useState<string | null>(null);
   const [evalB, setEvalB] = useState<string | null>(null);
 
-  const filteredCases = selectedCategory === '전체' 
-    ? CASES_DATA 
-    : CASES_DATA.filter(c => c.category === selectedCategory);
+  // 단계 이동 처리
+  const goStart = () => setStep('category');
+  
+  const selectCategory = (cat: string) => {
+    setSelectedCategory(cat);
+    setStep('list');
+  };
 
-  const handleSelectCase = (c: CaseItem) => {
+  const selectCase = (c: CaseItem) => {
     setCurrentCase(c);
     setEvalA(null);
     setEvalB(null);
+    setStep('detail');
   };
 
-  const handleBack = () => {
-    setCurrentCase(null);
-    setEvalA(null);
-    setEvalB(null);
+  const goBack = () => {
+    if (step === 'detail') setStep('list');
+    else if (step === 'list') setStep('category');
+    else if (step === 'category') setStep('home');
   };
+
+  const filteredCases = CASES_DATA.filter(c => c.category === selectedCategory);
 
   return (
-    <main className="max-w-4xl mx-auto p-6 text-white min-h-screen">
-      <header className="border-b border-gray-800 pb-6 mb-8 text-center">
-        <h1 className="text-3xl font-bold text-indigo-400">THE EXPERIENCE PROJECT</h1>
-        <p className="text-gray-400 text-sm mt-2">입장 바꿔 생각하기 : 타인의 시선에서 갈등을 바라봅니다</p>
-      </header>
-
-      {/* 1. 사례 목록 화면 */}
-      {!currentCase ? (
-        <div>
-          {/* 카테고리 필터 */}
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedCategory('전체')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                selectedCategory === '전체' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
-            >
-              전체
-            </button>
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                  selectedCategory === cat ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+    <div className="bg-black text-white min-h-screen font-sans flex flex-col justify-between max-w-md mx-auto px-6 py-8 border-x border-zinc-900">
+      
+      {/* 1. 홈 화면 (시작하기) */}
+      {step === 'home' && (
+        <div className="flex-1 flex flex-col justify-between my-auto py-12">
+          <div className="space-y-4 text-left">
+            <p className="text-xs tracking-widest text-zinc-500 uppercase">THE EXPERIENCE PROJECT</p>
+            <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
+              입장 바꿔<br />생각하기
+            </h1>
+            <p className="text-sm text-zinc-400 font-light leading-relaxed pt-2">
+              갈등 상황 속 서로 다른 두 인물의 입장을 살펴보고, 나만의 시선으로 세상을 바라봅니다.
+            </p>
           </div>
 
-          {/* 사례 카드리스트 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredCases.map(item => (
-              <div
-                key={item.id}
-                onClick={() => handleSelectCase(item)}
-                className="p-5 bg-gray-900 border border-gray-800 rounded-xl hover:border-indigo-500/50 hover:bg-gray-800/80 transition cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-950 text-indigo-300 border border-indigo-800/50 rounded-md">
-                    {item.category}
-                  </span>
-                  <h3 className="text-lg font-bold mt-3 mb-2">{item.title}</h3>
-                  <p className="text-xs text-gray-400">
-                    인물 A ({item.personA.name}) vs 인물 B ({item.personB.name})
-                  </p>
-                </div>
-                <div className="mt-4 text-right text-xs text-indigo-400 font-medium">
-                  입장 체험하기 &rarr;
-                </div>
-              </div>
-            ))}
+          <button
+            onClick={goStart}
+            className="w-full py-4 bg-white text-black font-semibold text-sm rounded-none hover:bg-zinc-200 transition active:scale-[0.99]"
+          >
+            시작하기
+          </button>
+        </div>
+      )}
+
+      {/* 2. 카테고리 선택 화면 */}
+      {step === 'category' && (
+        <div className="flex-1 flex flex-col justify-between py-4">
+          <div>
+            <button onClick={goBack} className="text-xs text-zinc-500 mb-8 hover:text-white transition">
+              ← 뒤로가기
+            </button>
+            <p className="text-xs text-zinc-500 uppercase mb-2">STEP 01</p>
+            <h2 className="text-2xl font-bold tracking-tight mb-8">카테고리 선택</h2>
+
+            <div className="space-y-3">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => selectCategory(cat)}
+                  className="w-full text-left p-5 border border-zinc-800 hover:border-white transition flex justify-between items-center group"
+                >
+                  <span className="text-sm font-medium">{cat}</span>
+                  <span className="text-xs text-zinc-600 group-hover:text-white transition">→</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      ) : (
-        /* 2. 상세보기 및 5단계 평가 화면 */
-        <div className="space-y-8">
-          {/* 상단 컨트롤 (뒤로가기 버튼) */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition text-gray-300"
-            >
-              &larr; 다른 사례 보기 (뒤로가기)
+      )}
+
+      {/* 3. 사례 선택 목록 화면 */}
+      {step === 'list' && (
+        <div className="flex-1 flex flex-col justify-between py-4">
+          <div>
+            <button onClick={goBack} className="text-xs text-zinc-500 mb-8 hover:text-white transition">
+              ← 카테고리로 돌아가기
             </button>
-            <span className="text-xs px-3 py-1 bg-indigo-950 text-indigo-300 border border-indigo-800/50 rounded-full">
-              {currentCase.category}
-            </span>
+            <p className="text-xs text-zinc-500 uppercase mb-2">{selectedCategory}</p>
+            <h2 className="text-2xl font-bold tracking-tight mb-6">사례 선택</h2>
+
+            <div className="space-y-4">
+              {filteredCases.map(item => (
+                <div
+                  key={item.id}
+                  onClick={() => selectCase(item)}
+                  className="p-5 border border-zinc-800 hover:border-white transition cursor-pointer space-y-2"
+                >
+                  <h3 className="text-base font-bold">{item.title}</h3>
+                  <p className="text-xs text-zinc-500">
+                    A: {item.personA.name} ({item.personA.role})<br />
+                    B: {item.personB.name} ({item.personB.role})
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+      )}
 
-          <h2 className="text-2xl font-bold text-center border-b border-gray-800 pb-4">
-            {currentCase.title}
-          </h2>
+      {/* 4. 사례 상세 및 5단계 평가 화면 */}
+      {step === 'detail' && currentCase && (
+        <div className="flex-1 flex flex-col justify-between py-4 space-y-8">
+          <div>
+            <button onClick={goBack} className="text-xs text-zinc-500 mb-6 hover:text-white transition">
+              ← 사례 목록으로 돌아가기
+            </button>
 
-          {/* A와 B의 이야기 카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Person A */}
-            <div className="p-6 bg-gray-900 border border-gray-800 rounded-xl space-y-4">
+            <div className="border-b border-zinc-800 pb-4 mb-6">
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{currentCase.category}</span>
+              <h2 className="text-xl font-bold mt-1">{currentCase.title}</h2>
+            </div>
+
+            {/* 인물 A 카드 */}
+            <div className="mb-8 border border-zinc-800 p-5 space-y-3">
               <div>
-                <div className="text-xs text-indigo-400 font-bold uppercase tracking-wider">PARTY A</div>
-                <h3 className="text-xl font-bold text-white mt-1">{currentCase.personA.name} 입장</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{currentCase.personA.role}</p>
+                <span className="text-[10px] text-zinc-500 uppercase tracking-widest">PERSON A</span>
+                <h3 className="text-base font-bold">{currentCase.personA.name}</h3>
+                <p className="text-xs text-zinc-400">{currentCase.personA.role}</p>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed bg-gray-950/60 p-4 rounded-lg border border-gray-800/50">
+              <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950 p-3 border border-zinc-900">
                 "{currentCase.storyA}"
               </p>
 
-              {/* 5단계 평가 선택지 */}
               <div className="pt-2">
-                <label className="block text-xs text-gray-400 mb-2 font-medium">
-                  {currentCase.personA.name}의 행동에 대해 어떻게 생각하시나요?
-                </label>
-                <div className="space-y-1.5">
+                <p className="text-[11px] text-zinc-500 mb-2">잘못 여부 평가:</p>
+                <div className="space-y-1">
                   {EVALUATION_OPTIONS.map(opt => (
                     <button
                       key={opt}
                       onClick={() => setEvalA(opt)}
-                      className={`w-full text-left px-3 py-2 text-xs rounded-md transition ${
+                      className={`w-full text-left px-3 py-2 text-xs border transition ${
                         evalA === opt
-                          ? 'bg-indigo-600 text-white font-bold'
-                          : 'bg-gray-800/60 text-gray-400 hover:bg-gray-800'
+                          ? 'bg-white text-black font-bold border-white'
+                          : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'
                       }`}
                     >
                       {opt}
@@ -140,31 +160,28 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Person B */}
-            <div className="p-6 bg-gray-900 border border-gray-800 rounded-xl space-y-4">
+            {/* 인물 B 카드 */}
+            <div className="mb-8 border border-zinc-800 p-5 space-y-3">
               <div>
-                <div className="text-xs text-rose-400 font-bold uppercase tracking-wider">PARTY B</div>
-                <h3 className="text-xl font-bold text-white mt-1">{currentCase.personB.name} 입장</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{currentCase.personB.role}</p>
+                <span className="text-[10px] text-zinc-500 uppercase tracking-widest">PERSON B</span>
+                <h3 className="text-base font-bold">{currentCase.personB.name}</h3>
+                <p className="text-xs text-zinc-400">{currentCase.personB.role}</p>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed bg-gray-950/60 p-4 rounded-lg border border-gray-800/50">
+              <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950 p-3 border border-zinc-900">
                 "{currentCase.storyB}"
               </p>
 
-              {/* 5단계 평가 선택지 */}
               <div className="pt-2">
-                <label className="block text-xs text-gray-400 mb-2 font-medium">
-                  {currentCase.personB.name}의 행동에 대해 어떻게 생각하시나요?
-                </label>
-                <div className="space-y-1.5">
+                <p className="text-[11px] text-zinc-500 mb-2">잘못 여부 평가:</p>
+                <div className="space-y-1">
                   {EVALUATION_OPTIONS.map(opt => (
                     <button
                       key={opt}
                       onClick={() => setEvalB(opt)}
-                      className={`w-full text-left px-3 py-2 text-xs rounded-md transition ${
+                      className={`w-full text-left px-3 py-2 text-xs border transition ${
                         evalB === opt
-                          ? 'bg-rose-600 text-white font-bold'
-                          : 'bg-gray-800/60 text-gray-400 hover:bg-gray-800'
+                          ? 'bg-white text-black font-bold border-white'
+                          : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'
                       }`}
                     >
                       {opt}
@@ -173,26 +190,26 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* 최종 선택 제출 요약 */}
-          {evalA && evalB && (
-            <div className="p-6 bg-indigo-950/40 border border-indigo-800/60 rounded-xl text-center space-y-3">
-              <h4 className="font-bold text-indigo-300">당신의 관점 요약</h4>
-              <p className="text-sm text-gray-300">
-                <span className="font-semibold text-white">{currentCase.personA.name}</span>: <span className="text-indigo-400">{evalA}</span> / {' '}
-                <span className="font-semibold text-white">{currentCase.personB.name}</span>: <span className="text-rose-400">{evalB}</span>
-              </p>
-              <button 
-                onClick={handleBack}
-                className="mt-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition"
-              >
-                다른 사례 보러가기
-              </button>
-            </div>
-          )}
+            {/* 완료 요약 및 뒤로가기 */}
+            {evalA && evalB && (
+              <div className="p-4 border border-zinc-700 bg-zinc-950 text-center space-y-3">
+                <p className="text-xs text-zinc-400">평가가 완료되었습니다.</p>
+                <button
+                  onClick={goBack}
+                  className="w-full py-3 bg-white text-black text-xs font-bold hover:bg-zinc-200 transition"
+                >
+                  다른 사례 선택하기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </main>
+
+      <footer className="text-center pt-8 border-t border-zinc-900">
+        <p className="text-[10px] text-zinc-600">THE EXPERIENCE PROJECT © 2026</p>
+      </footer>
+    </div>
   );
 }
