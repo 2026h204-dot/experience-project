@@ -13,12 +13,15 @@ export default function ResultPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // caseItem이 없을 경우 로직을 실행하지 않도록 처리
     if (!caseItem) return;
 
-    // 실제 서버 DB에 투표 결과 집계 요청
+    // TypeScript 타입 안전성을 위한 로컬 변수 할당
+    const currentCaseId = caseItem.id;
+
     async function recordAndFetchData() {
       try {
-        const response = await fetch(`/api/vote?caseId=${caseItem.id}`, {
+        const response = await fetch(`/api/vote?caseId=${currentCaseId}`, {
           method: 'POST',
         });
         const data = await response.json();
