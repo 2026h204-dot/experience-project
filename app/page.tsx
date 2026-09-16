@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CASES_DATA, CATEGORIES, CaseItem } from '@/data/cases';
-import { supabase } from '@/lib/supabase';
+import { CASES_DATA, CATEGORIES, CaseItem } from '../data/cases';
+import { supabase } from '../lib/supabase';
 
 export default function Home() {
   const [page, setPage] = useState<number>(0);
