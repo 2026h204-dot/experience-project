@@ -1,82 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CATEGORIES, CASES_DATA, CaseItem } from '@/data/cases';
+import { CASES_DATA } from '@/data/cases';
 
-export default function HomePage() {
+export default function ResultPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [step, setStep] = useState<'intro' | 'category' | 'topic'>('intro');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const caseItem = CASES_DATA.find((c) => c.id === params.id);
 
-  const filteredCases = CASES_DATA.filter((c) => c.category === selectedCategory);
+  const [ratio, setRatio] = useState<number>(100);
+  const [totalCount, setTotalCount] = useState<number>(1);
+
+  useEffect(() => {
+    if (!caseItem) return;
+
+    // 브라우저 로컬 저장소 기반 순수 실시간 집계
+    const storageKey = `real_votes_${caseItem.id}`;
+    const currentCount = localStorage.getItem(storageKey);
+
+    if (currentCount) {
+      const newCount = Number(currentCount) + 1;
+      localStorage.setItem(storageKey, String(newCount));
+      setTotalCount(newCount);
+    } else {
+      localStorage.setItem(storageKey, '1');
+      setTotalCount(1);
+    }
+  }, [caseItem]);
+
+  if (!caseItem) {
+    return (
+      <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+        <p>사례를 찾을 수 없습니다.</p>
+        <button
+          onClick={() => router.push('/')}
+          className="mt-4 bg-white text-black px-6 py-2 rounded-xl text-sm font-semibold"
+        >
+          홈으로 이동
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-      {/* 1단계: 메인 랜딩 */}
-      {step === 'intro' && (
-        <div className="w-full max-w-lg flex flex-col items-center">
-          <h1 className="text-3xl font-extrabold tracking-wider mb-4 uppercase">
-            THE EXPERIENCE PROJECT
-          </h1>
-          <p className="text-gray-400 text-sm leading-relaxed mb-10">
-            타인을 이해하는 일은,<br />
-            내가 모르는 그의 삶을 상상하는 것부터 시작된다.
-          </p>
-          <button
-            onClick={() => setStep('category')}
-            className="w-full bg-white hover:bg-gray-200 text-black font-semibold py-4 rounded-xl transition-all"
-          >
-            시작하기
-          </button>
-        </div>
-      )}
+      <h1 className="text-3xl font-extrabold mb-10 tracking-tight">감사합니다.</h1>
 
-      {/* 2단계: 카테고리 선택 */}
-      {step === 'category' && (
-        <div className="w-full max-w-md flex flex-col items-center">
-          <h2 className="text-xl font-bold mb-8">카테고리를 선택해 주세요</h2>
-          <div className="w-full flex flex-col gap-3">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setSelectedCategory(cat);
-                  setStep('topic');
-                }}
-                className="w-full bg-[#161618] hover:bg-[#222225] text-gray-200 font-medium py-4 px-6 rounded-xl border border-[#26262a] text-left transition-all"
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+      <div className="w-full max-w-md bg-[#161618] border border-[#26262a] rounded-2xl p-8 mb-6 shadow-xl">
+        <p className="text-sm text-gray-400 mb-3 font-medium">실시간 연동 데이터 집계 결과</p>
+        
+        <div className="text-5xl font-black text-[#818cf8] my-4 tracking-tight">
+          약 {ratio}%
         </div>
-      )}
 
-      {/* 3단계: 주제 선택 */}
-      {step === 'topic' && (
-        <div className="w-full max-w-md flex flex-col items-center">
-          <h2 className="text-xl font-bold mb-8">주제를 선택해 주세요</h2>
-          <div className="w-full flex flex-col gap-3">
-            {filteredCases.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => router.push(`/cases/${c.id}`)}
-                className="w-full bg-[#161618] hover:bg-[#222225] text-left p-5 rounded-xl border border-[#26262a] transition-all flex flex-col gap-1"
-              >
-                <span className="text-xs text-[#818cf8] font-mono">{c.id}</span>
-                <span className="text-base font-semibold text-white">{c.title}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setStep('category')}
-            className="mt-6 text-xs text-gray-500 underline"
-          >
-            카테고리 다시 선택
-          </button>
-        </div>
-      )}
+        <p className="text-gray-200 text-base font-medium leading-relaxed mb-6">
+          의 응답자가 상대방의 깊은 맥락을 확인한 후<br />자신의 판단을 조정했습니다.
+        </p>
+
+        <p className="text-xs text-gray-500 font-mono">
+          (실시간 참여 데이터: 총 {totalCount}명)
+        </p>
+      </div>
+
+      <button
+        onClick={() => router.push('/')}
+        className="w-full max-w-md bg-[#222225] hover:bg-[#2c2c30] text-white font-semibold py-4 rounded-xl transition-all border border-[#333338]"
+      >
+        다른 주제 체험하기
+      </button>
     </main>
   );
 }
