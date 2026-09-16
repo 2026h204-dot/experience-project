@@ -1,78 +1,82 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { CASES_DATA, CATEGORIES } from '@/data/cases';
+import { useRouter } from 'next/navigation';
+import { CATEGORIES, CASES_DATA, CaseItem } from '@/data/cases';
 
-export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+export default function HomePage() {
+  const router = useRouter();
+  const [step, setStep] = useState<'intro' | 'category' | 'topic'>('intro');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  const filteredCases = selectedCategory === '전체'
-    ? CASES_DATA
-    : CASES_DATA.filter((c) => c.category === selectedCategory);
+  const filteredCases = CASES_DATA.filter((c) => c.category === selectedCategory);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-      <header style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
-          ⚖️ 마음이 바뀌는 재판소
-        </h1>
-        <p style={{ color: '#6b7280', fontSize: '16px' }}>
-          첫 직관 판단과 A, B의 사정을 모두 들은 후 내 최종 판결은 어떻게 달라질까요?
-        </p>
-      </header>
-
-      {/* 카테고리 필터 */}
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '32px' }}>
-        {['전체', ...CATEGORIES].map((cat) => (
+    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+      {/* 1단계: 메인 랜딩 */}
+      {step === 'intro' && (
+        <div className="w-full max-w-lg flex flex-col items-center">
+          <h1 className="text-3xl font-extrabold tracking-wider mb-4 uppercase">
+            THE EXPERIENCE PROJECT
+          </h1>
+          <p className="text-gray-400 text-sm leading-relaxed mb-10">
+            타인을 이해하는 일은,<br />
+            내가 모르는 그의 삶을 상상하는 것부터 시작된다.
+          </p>
           <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '20px',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              background: selectedCategory === cat ? '#4f46e5' : '#f3f4f6',
-              color: selectedCategory === cat ? '#ffffff' : '#4b5563',
-            }}
+            onClick={() => setStep('category')}
+            className="w-full bg-white hover:bg-gray-200 text-black font-semibold py-4 rounded-xl transition-all"
           >
-            {cat}
+            시작하기
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* 사건 리스트 */}
-      <div style={{ display: 'grid', gap: '16px' }}>
-        {filteredCases.map((item) => (
-          <Link key={item.id} href={`/cases/${item.id}`} style={{ textDecoration: 'none' }}>
-            <div
-              style={{
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '20px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ background: '#eef2ff', color: '#4f46e5', padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
-                  {item.category}
-                </span>
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
-                {item.title}
-              </h3>
-              <p style={{ color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
-                {item.summary}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+      {/* 2단계: 카테고리 선택 */}
+      {step === 'category' && (
+        <div className="w-full max-w-md flex flex-col items-center">
+          <h2 className="text-xl font-bold mb-8">카테고리를 선택해 주세요</h2>
+          <div className="w-full flex flex-col gap-3">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setStep('topic');
+                }}
+                className="w-full bg-[#161618] hover:bg-[#222225] text-gray-200 font-medium py-4 px-6 rounded-xl border border-[#26262a] text-left transition-all"
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3단계: 주제 선택 */}
+      {step === 'topic' && (
+        <div className="w-full max-w-md flex flex-col items-center">
+          <h2 className="text-xl font-bold mb-8">주제를 선택해 주세요</h2>
+          <div className="w-full flex flex-col gap-3">
+            {filteredCases.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => router.push(`/cases/${c.id}`)}
+                className="w-full bg-[#161618] hover:bg-[#222225] text-left p-5 rounded-xl border border-[#26262a] transition-all flex flex-col gap-1"
+              >
+                <span className="text-xs text-[#818cf8] font-mono">{c.id}</span>
+                <span className="text-base font-semibold text-white">{c.title}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setStep('category')}
+            className="mt-6 text-xs text-gray-500 underline"
+          >
+            카테고리 다시 선택
+          </button>
+        </div>
+      )}
+    </main>
   );
 }
